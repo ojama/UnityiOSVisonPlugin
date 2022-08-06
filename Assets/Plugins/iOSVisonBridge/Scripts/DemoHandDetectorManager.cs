@@ -20,6 +20,15 @@ public class DemoHandDetectorManager : MonoBehaviour
     }
 
     [SerializeField]
+    ARSession m_ARSession;
+
+    public ARSession arSession
+    {
+        get => m_ARSession;
+        set => m_ARSession = value;
+    }
+
+    [SerializeField]
     Camera m_Cam;
 
     [Tooltip("Hand point prefab")]
@@ -74,10 +83,23 @@ public class DemoHandDetectorManager : MonoBehaviour
 
             try
             {
-                for (int i = 0; i < points.Count; i++)
+                Debug.Log("DrawPointsCoroutine " + pointTransforms.Count + " points count " + points.Count);
+
+                int totalPoints = points.Count;
+                for (int i = 0; i < totalPoints; i++)
                 {
                     pointTransforms[i].anchoredPosition = new Vector3(Screen.width * ((float)points[i].y - 0.5f), Screen.height * (0.5f - (float)points[i].x));
+                    pointTransforms[i].gameObject.SetActive(true);
                     pointTransforms[i].SendMessage("SetText", points[i].pointName);
+                }
+
+                if (pointTransforms.Count > totalPoints)
+                {
+                    for (int i = 0; i < pointTransforms.Count - totalPoints; i++)
+                    {
+                        //Debug.Log("pointTransforms set inactive "+(pointTransforms.Count - i -1));
+                        pointTransforms[pointTransforms.Count - i -1].gameObject.SetActive(false);
+                    }
                 }
             }
             catch (Exception ex)
@@ -158,6 +180,36 @@ public class DemoHandDetectorManager : MonoBehaviour
             Debug.LogWarning(ex.Message);
         }
 
+    }
+
+    public void SwitchCamera()
+    {
+        CameraFacingDirection newFacingDirection;
+        switch (m_CameraManager.requestedFacingDirection)
+        {
+            case CameraFacingDirection.World:
+                newFacingDirection = CameraFacingDirection.User;
+                break;
+            case CameraFacingDirection.User:
+            default:
+                newFacingDirection = CameraFacingDirection.World;
+                break;
+        }
+        //m_ARSession.Reset();
+        Debug.Log($"Switching ARCameraManager.requestedFacingDirection from {m_CameraManager.requestedFacingDirection} to {newFacingDirection}");
+        m_CameraManager.requestedFacingDirection = newFacingDirection;
+    }
+
+    public void ChangeMaxHandCount(int c)
+    {
+        maxHandCount = c;
+        //processing = true;
+        //int total = pointTransforms.Count;
+        //for (int i = 0; i < total; i++)
+        //{
+        //    Destroy(pointTransforms[i].gameObject);
+        //}
+        //processing = false;
     }
 
     [DllImport("__Internal")]
